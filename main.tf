@@ -30,8 +30,14 @@ resource "aws_security_group" "micheal_security_group" {
         cidr_blocks = ["0.0.0.0/0"]//allow all outgoing traffic
     } 
 }
+
+variable "key_name" {
+    type = string
+    default = "micheal_key"
+}
+
 resource "aws_key_pair" "micheal_key" {
-    key_name = "micheal_key"
+    key_name = var.key_name
     public_key = file("id_rsa.pub")
   
 }
