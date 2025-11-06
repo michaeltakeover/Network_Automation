@@ -45,7 +45,7 @@ jobs:
 
       - name: Generate unique key name
         id: key_name
-        run: echo "name=zander_key_$(date +%s)" >> $GITHUB_OUTPUT
+        run: echo "name=micheal_key_$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Setup SSH Keys
         run: |
