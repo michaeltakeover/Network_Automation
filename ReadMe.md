@@ -1,4 +1,4 @@
-# ☁️ Infrastructure Deployment and Web Application Setup
+# Infrastructure Deployment and Web Application Setup
 
 This repository contains the configuration files and automation scripts to deploy an AWS EC2 instance, provision it with necessary software (Docker, Docker Compose, Nginx), and deploy a basic Nginx-based web application using a Docker container.
 
@@ -6,7 +6,7 @@ The deployment process is fully automated using a **GitHub Actions workflow**.
 
 ---
 
-## 🛠️ Components
+# Components
 
 This setup uses the following core components:
 
@@ -18,7 +18,7 @@ This setup uses the following core components:
 
 ---
 
-## 🚀 Deployment Workflow
+## Deployment Workflow
 
 The infrastructure deployment is managed by the GitHub Actions workflow defined in `.github/workflows/deploy-infrastructure.yml` (based on the provided YAML).
 
@@ -39,7 +39,7 @@ The workflow is triggered on pushes and pull requests to the `main` branch.
 
 ---
 
-## 💻 Infrastructure and Provisioning Details
+## Infrastructure and Provisioning Details
 
 ### Terraform (`main.tf` equivalent)
 
@@ -67,7 +67,7 @@ The application is a simple **Nginx container** that copies the local `index.htm
 
 ---
 
-## 🔒 Required GitHub Secrets
+## Required GitHub Secrets
 
 The GitHub Actions workflow relies on the following repository secrets for successful execution:
 
@@ -80,7 +80,7 @@ The GitHub Actions workflow relies on the following repository secrets for succe
 
 ---
 
-## 💡 Next Steps
+## Next Steps
 
 To make this setup runnable, ensure you have:
 
