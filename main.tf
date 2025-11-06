@@ -55,7 +55,7 @@ resource "aws_instance" "micheal_server" {
     # }
 
      provisioner "local-exec" {
-        command = "sleep 30 && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i '${self.public_ip},' -u ec2-user --private-key /home/Osayande/id_rsa deploy.yml"
+        command = "sleep 30 && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i '${self.public_ip},' -u ec2-user --private-key id_rsa deploy.yml"
     }
 }
 output "instance_public_ip" {
