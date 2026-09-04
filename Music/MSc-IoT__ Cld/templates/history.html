@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Assessment History{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="eyebrow">Log</div>
+  <h1>Assessment history</h1>
+  <p class="subtitle">Every run, including failed lookups — status columns show what actually succeeded.</p>
+
+  <div class="panel" style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Device</th><th>Type</th><th>Score</th><th>Risk</th><th>Compliance</th>
+          <th>CVEs</th><th>Avg CVSS</th><th>NVD status</th><th>Exposure</th><th>Shodan status</th><th>Date</th><th>Report</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in assessments %}
+        <tr>
+          <td class="mono">{{ a.id }}</td>
+          <td>{{ a.device_name }}</td>
+          <td>{{ a.device_type }}</td>
+          <td class="mono">{{ a.score }}/100</td>
+          <td><span class="pill {{ 'safe' if a.risk_level=='Low Risk' else 'warn' if a.risk_level=='Medium Risk' else 'danger' }}">{{ a.risk_level }}</span></td>
+          <td><span class="pill {{ 'safe' if a.compliance_status=='Compliant' else 'danger' }}">{{ a.compliance_status }}</span></td>
+          <td class="mono">{{ a.cve_count }}</td>
+          <td class="mono">{{ a.avg_cvss }}</td>
+          <td><span class="pill {{ 'safe' if a.nvd_status=='ok' else 'muted' if a.nvd_status=='no_results' else 'danger' }}">{{ a.nvd_status }}</span></td>
+          <td>{{ a.exposure_level }}</td>
+          <td><span class="pill {{ 'muted' if a.shodan_status=='not_configured' else 'safe' if a.shodan_status=='ok' else 'danger' }}">{{ a.shodan_status }}</span></td>
+          <td class="mono" style="color:var(--muted);">{{ a.created_at }}</td>
+          <td><a href="{{ url_for('download_report', assessment_id=a.id) }}" class="pill muted" style="cursor:pointer;">PDF</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}New Assessment{% endblock %}
+{% block content %}
+<div class="page" style="max-width: 720px;">
+  <div class="eyebrow">New scan</div>
+  <h1>IoT Device Security Assessment</h1>
+  <p class="subtitle">Answer the four control questions — CVE, exploitation, and exposure data is pulled in automatically.</p>
+
+  <div class="panel">
+    <form method="POST" action="{{ url_for('result') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="device_name">Device name (use the real product/model where possible — e.g. "TP-Link TL-WR841N")</label>
+      <input type="text" id="device_name" name="device_name" placeholder="e.g. TP-Link TL-WR841N" required>
+
+      <label for="device_type">Device type</label>
+      <select id="device_type" name="device_type">
+        {% for d in devices %}
+          <option value="{{ d.code }}">{{ d.label }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="auto_update">Does the device support automatic firmware updates?</label>
+      <select id="auto_update" name="auto_update">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+
+      <label for="authentication">Uses strong authentication?</label>
+      <select id="authentication" name="authentication">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+
+      <label for="encryption">Uses encryption?</label>
+      <select id="encryption" name="encryption">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+
+      <label for="support">Supported by vendor for 5+ years?</label>
+      <select id="support" name="support">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+
+      <button type="submit" class="btn">Assess device</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

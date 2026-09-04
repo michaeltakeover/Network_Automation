@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Login — IoT Security Platform{% endblock %}
+{% block content %}
+<div class="login-wrap">
+  <div class="panel login-card">
+    <div class="eyebrow">Admin access</div>
+    <h1 style="font-size:1.6rem;">Sign in</h1>
+    <p class="subtitle" style="margin-bottom:0;">Vendor-agnostic IoT device risk scoring.</p>
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
+
+      <button type="submit" class="btn" style="width:100%;">Sign in</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

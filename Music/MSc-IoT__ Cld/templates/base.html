@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}IoT Security Platform{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% if session.get('logged_in') %}
+  <div class="navbar">
+    <div class="brand"><span class="dot"></span> Vendor-Agnostic IoT Security Platform</div>
+    <nav>
+      <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.path == '/dashboard' }}">Dashboard</a>
+      <a href="{{ url_for('assessment') }}" class="{{ 'active' if request.path == '/assessment' }}">Assessment</a>
+      <a href="{{ url_for('history') }}" class="{{ 'active' if request.path == '/history' }}">History</a>
+      <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+    </nav>
+  </div>
+  {% endif %}
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="page" style="padding-bottom:0;">
+        {% for m in messages %}
+          <div class="banner error">{{ m }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</body>
+</html>

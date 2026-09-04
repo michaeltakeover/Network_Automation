@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Assessment Result{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="eyebrow">Result</div>
+  <h1>{{ device_name }}</h1>
+  <p class="subtitle">Type: {{ device_type }} &nbsp;·&nbsp; Automatic updates: {{ auto_update }}</p>
+
+  <div class="panel score-hero" style="margin-bottom:20px;">
+    <div class="score-ring" style="border: 6px solid {{ '#34d399' if status_colour=='green' else '#f5b942' if status_colour=='orange' else '#ff6a6a' if status_colour=='red' else '#c23c3c' }};">
+      <div style="text-align:center;">
+        <div class="num">{{ score }}</div>
+        <div class="den">/ 100</div>
+      </div>
+    </div>
+    <div>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <span class="pill {{ 'safe' if compliance_status=='Compliant' else 'danger' }}">{{ compliance_status }}</span>
+        <span class="pill {{ 'safe' if risk_level=='Low Risk' else 'warn' if risk_level=='Medium Risk' else 'danger' }}">{{ risk_level }}</span>
+      </div>
+      <div class="mono" style="color:var(--muted); font-size:0.85rem;">
+        Base score {{ base_score }}/100 → −{{ cve_penalty }} (CVE) −{{ exploitation_penalty }} (exploitation) −{{ exposure_penalty }} (exposure) = {{ score }}/100
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>Baseline vs. threat-informed comparison</h3>
+    <table>
+      <thead><tr><th></th><th>Risk level</th><th>Compliance</th><th>Score</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Condition A — Baseline only</td>
+          <td><span class="pill {{ 'safe' if baseline_risk_level=='Low Risk' else 'warn' if baseline_risk_level=='Medium Risk' else 'danger' }}">{{ baseline_risk_level }}</span></td>
+          <td><span class="pill {{ 'safe' if baseline_compliance_status=='Compliant' else 'danger' }}">{{ baseline_compliance_status }}</span></td>
+          <td class="mono">{{ base_score }}/100</td>
+        </tr>
+        <tr>
+          <td>Condition B — Threat-informed</td>
+          <td><span class="pill {{ 'safe' if risk_level=='Low Risk' else 'warn' if risk_level=='Medium Risk' else 'danger' }}">{{ risk_level }}</span></td>
+          <td><span class="pill {{ 'safe' if compliance_status=='Compliant' else 'danger' }}">{{ compliance_status }}</span></td>
+          <td class="mono">{{ score }}/100</td>
+        </tr>
+      </tbody>
+    </table>
+    {% if baseline_risk_level != risk_level or baseline_compliance_status != compliance_status %}
+      <div class="banner info" style="margin-top:14px;">⚡ Threat intelligence changed the classification: {{ baseline_risk_level }}/{{ baseline_compliance_status }} → {{ risk_level }}/{{ compliance_status }}.</div>
+    {% else %}
+      <div class="banner muted" style="margin-top:14px;">Threat intelligence did not change the risk classification for this device.</div>
+    {% endif %}
+    <div class="mono" style="color:var(--muted); font-size:0.78rem; margin-top:10px;">
+      Lookup time — NVD: {{ nvd_time_ms }}ms · CISA KEV: {{ cisa_time_ms }}ms · Shodan: {{ shodan_time_ms }}ms · Total: {{ total_time_ms }}ms
+    </div>
+  </div>
+
+  <div class="grid grid-2" style="margin-bottom:20px;">
+    <div class="panel">
+      <h3>Recommendations</h3>
+      <ul class="recs">
+        {% for r in recommendations %}<li>{{ r }}</li>{% endfor %}
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>Standards mapping</h3>
+      <ul class="recs">
+        {% for s in standards %}
+          <li>{{ s.question }} → <span class="mono">{{ s.standard }}</span> — {{ s.clause }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>Detected vulnerabilities (NVD)</h3>
+    {% if nvd_result.status == 'error' %}
+      <div class="banner error">CVE lookup failed — {{ nvd_result.message }}. This assessment's score does <b>not</b> reflect CVE data; treat it as a partial result and re-run when connectivity is restored.</div>
+    {% elif nvd_result.match_type == 'category_fallback' %}
+      <div class="banner error">⚠ No CVEs found for the exact product name "{{ device_name }}". {{ nvd_result.message }}</div>
+    {% elif nvd_result.status == 'no_results' %}
+      <div class="banner muted">{{ nvd_result.message }} (searched: "{{ nvd_result.keyword_used }}")</div>
+    {% else %}
+      <div class="banner info">{{ nvd_result.message }} (searched: "{{ nvd_result.keyword_used }}")</div>
+      <table>
+        <thead><tr><th>CVE</th><th>CVSS</th><th>Severity</th><th>Description</th></tr></thead>
+        <tbody>
+          {% for v in vulnerabilities %}
+          <tr>
+            <td class="mono">{{ v.cve_id }}</td>
+            <td class="mono">{{ v.cvss_score if v.cvss_score is not none else '—' }}</td>
+            <td><span class="pill {{ 'danger' if v.severity in ['Critical','High'] else 'warn' if v.severity=='Medium' else 'safe' if v.severity=='Low' else 'muted' }}">{{ v.severity }}</span></td>
+            <td style="color:var(--muted); font-size:0.85rem;">{{ v.description[:180] }}{% if v.description|length > 180 %}…{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-2" style="margin-bottom:20px;">
+    <div class="panel">
+      <h3>Actively exploited (CISA KEV)</h3>
+      {% if cisa_result.status == 'error' %}
+        <div class="banner error">{{ cisa_result.message }}</div>
+      {% else %}
+        <div class="banner {{ 'error' if exploited_cves else 'muted' }}">{{ cisa_result.message }}</div>
+      {% endif %}
+    </div>
+    <div class="panel">
+      <h3>Internet exposure (Shodan)</h3>
+      {% if shodan_data.status == 'not_configured' %}
+        <div class="banner muted">Shodan not configured — this check did not run (not the same as "no exposure found").</div>
+      {% elif shodan_data.status == 'error' %}
+        <div class="banner error">{{ shodan_data.message }}</div>
+      {% else %}
+        <div class="banner info">Exposure level: <b>{{ shodan_data.exposure_level }}</b> — {{ shodan_data.message }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div style="display:flex; gap:12px;">
+    <a href="{{ url_for('assessment') }}" class="btn secondary">Assess another device</a>
+    <a href="{{ url_for('download_report', assessment_id=assessment_id) }}" class="btn">Download PDF report</a>
+  </div>
+</div>
+{% endblock %}

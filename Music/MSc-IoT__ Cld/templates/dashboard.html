@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="eyebrow">Overview</div>
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px;">
+    <div>
+      <h1>Analytics dashboard</h1>
+      <p class="subtitle" style="margin-bottom:0;">Security assessment analytics and compliance overview.</p>
+    </div>
+    <a href="{{ url_for('assessment') }}" class="btn">New assessment</a>
+  </div>
+
+  <form method="GET" style="margin-bottom:24px; max-width:280px;">
+    <label for="device_type" style="margin-top:0;">Filter by device type</label>
+    <select id="device_type" name="device_type" onchange="this.form.submit()">
+      <option value="All" {{ 'selected' if selected_device_type=='All' }}>All Devices</option>
+      {% for t in device_types %}
+        <option value="{{ t }}" {{ 'selected' if t==selected_device_type }}>{{ t }}</option>
+      {% endfor %}
+    </select>
+  </form>
+
+  <div class="grid grid-4" style="margin-bottom:18px;">
+    <div class="stat-card"><div class="label">Total assessments</div><div class="value">{{ stats.total_assessments }}</div></div>
+    <div class="stat-card"><div class="label">Average score</div><div class="value">{{ stats.average_score }}/100</div></div>
+    <div class="stat-card safe"><div class="label">Compliant</div><div class="value">{{ stats.compliant }}</div></div>
+    <div class="stat-card danger"><div class="label">Non-compliant</div><div class="value">{{ stats.non_compliant }}</div></div>
+  </div>
+  <div class="grid grid-4" style="margin-bottom:18px;">
+    <div class="stat-card"><div class="label">Total CVEs</div><div class="value">{{ stats.total_cves }}</div></div>
+    <div class="stat-card warn"><div class="label">Total CVE penalty</div><div class="value">−{{ stats.total_cve_penalty }}</div></div>
+    <div class="stat-card"><div class="label">Average CVSS</div><div class="value">{{ stats.average_cvss }}</div></div>
+    <div class="stat-card {{ 'danger' if stats.high_exposure_devices > 0 else '' }}"><div class="label">High-exposure devices</div><div class="value">{{ stats.high_exposure_devices }}</div></div>
+  </div>
+
+  {% if stats.nvd_lookup_failures > 0 %}
+  <div class="banner error">{{ stats.nvd_lookup_failures }} assessment(s) had a failed CVE lookup — their scores don't reflect CVE data. See History for details.</div>
+  {% endif %}
+  {% if stats.shodan_unconfigured_count == stats.total_assessments and stats.total_assessments > 0 %}
+  <div class="banner muted">Shodan is not configured — exposure penalty and high-exposure counts are 0 because the check never ran, not because devices are unexposed.</div>
+  {% endif %}
+
+  <div class="grid grid-2" style="margin-bottom:18px;">
+    <div class="panel">
+      <h3>Risk distribution</h3>
+      <canvas id="riskChart" height="200"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Compliance distribution</h3>
+      <canvas id="complianceChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel">
+      <h3>CVEs by device type</h3>
+      <canvas id="cveChart" height="200"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Average CVSS by device type</h3>
+      <canvas id="cvssChart" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  const gridColor = 'rgba(139,147,168,0.15)';
+  const textColor = '#8b93a8';
+  Chart.defaults.color = textColor;
+  Chart.defaults.borderColor = gridColor;
+  Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+
+  new Chart(document.getElementById('riskChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ chart_data.risk_distribution.keys() | list | tojson }},
+      datasets: [{
+        label: 'Devices',
+        data: {{ chart_data.risk_distribution.values() | list | tojson }},
+        backgroundColor: '#5eead4',
+        borderRadius: 4,
+      }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  new Chart(document.getElementById('complianceChart'), {
+    type: 'doughnut',
+    data: {
+      labels: {{ chart_data.compliance_distribution.keys() | list | tojson }},
+      datasets: [{
+        data: {{ chart_data.compliance_distribution.values() | list | tojson }},
+        backgroundColor: ['#34d399', '#ff6a6a'],
+        borderWidth: 0,
+      }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } } }
+  });
+
+  new Chart(document.getElementById('cveChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ cve_chart_data.labels | tojson }},
+      datasets: [{
+        label: 'Total CVEs',
+        data: {{ cve_chart_data.total_cves | tojson }},
+        backgroundColor: '#5eead4',
+        borderRadius: 4,
+      }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  new Chart(document.getElementById('cvssChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ cve_chart_data.labels | tojson }},
+      datasets: [{
+        label: 'Average CVSS',
+        data: {{ cve_chart_data.avg_cvss | tojson }},
+        backgroundColor: '#f5b942',
+        borderRadius: 4,
+      }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 10 } } }
+  });
+</script>
+{% endblock %}
